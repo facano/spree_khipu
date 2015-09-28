@@ -17,6 +17,7 @@ module Spree
       )
 
       begin
+        puts "Create Payment: #{payment_args(@payment)}"
         map = provider.create_payment_url(payment_args(@payment))
         khipu_payment_url = payment_method.modify_url_by_payment_type(map['url'])
         redirect_to khipu_payment_url
@@ -48,6 +49,7 @@ module Spree
     end
 
     def notify
+      puts  "Notifying Khipu Payment: #{params}"
       begin
         map = provider.get_payment_notification(params)
 

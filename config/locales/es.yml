@@ -1,4 +1,5 @@
----
 es:
   spree:
-    khipu:
+    order_state:
+      khipu: khipu
+    kiphu_redirect: "Usted será redirigido a la página de pago de Khipu. Después de completar el formulario de pago volverá a la tienda."

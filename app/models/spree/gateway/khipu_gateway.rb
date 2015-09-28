@@ -6,6 +6,8 @@ class Spree::Gateway::KhipuGateway < Spree::Gateway
   preference :payment_type, :string
   preference :subject, :string
 
+  STATE = 'khipu'
+
   def actions
     %w{capture void}
   end
@@ -40,7 +42,7 @@ class Spree::Gateway::KhipuGateway < Spree::Gateway
   end
 
   def method_type
-    'khipu'
+    STATE
   end
 
   def authorize(money, creditcard, gateway_options)
@@ -51,5 +53,9 @@ class Spree::Gateway::KhipuGateway < Spree::Gateway
     return url if not ["manual", "simplified"].include? preferred_payment_type
 
     url.sub! "/payment/show/", "/payment/#{preferred_payment_type}/"
+  end
+
+  def payment_method_logo
+      "https://s3.amazonaws.com/static.khipu.com/buttons/2015/150x50-transparent.png"
   end
 end

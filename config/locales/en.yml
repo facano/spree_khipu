@@ -1,5 +1,5 @@
----
 en:
   spree:
-    khipu:
-      
+    order_state:
+      khipu: khipu
+    kiphu_redirect: "You'll be redirected to Khipu Hosted Payment Page. After completing the payment form you'll be back to the store."
