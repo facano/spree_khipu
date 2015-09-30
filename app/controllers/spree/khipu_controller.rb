@@ -3,6 +3,7 @@ module Spree
   require 'net/https'
   require 'json'
   require 'khipu'
+
   class KhipuController < StoreController
     ssl_allowed
     protect_from_forgery except: [:notify]
@@ -10,11 +11,7 @@ module Spree
     def pay
       order = current_order || raise(ActiveRecord::RecordNotFound)
 
-      @payment = Spree::Payment.create(
-        :amount => order.total,
-        :order => order,
-        :payment_method => payment_method
-      )
+      @payment = order.payments.order(:id).last
 
       begin
         puts "Create Payment: #{payment_args(@payment)}"
@@ -30,15 +27,19 @@ module Spree
 
     def success
       @payment = Spree::Payment.where(identifier: params[:payment]).last
+      @order = @payment.order
       @khipu_receipt = Spree::KhipuPaymentReceipt.create(payment: @payment)
 
-      @payment.order.next!
+      # To clean the Cart
+      session[:order_id] = nil
+      @current_order     = nil
 
-      @current_order = nil
+      redirect_to root_path and return if @payment.blank?
+      redirect_to khipu_cancel_path(params) and return  if @payment.failed?
+
       flash.notice = Spree.t(:order_processed_successfully)
-      flash['order_completed'] = true
 
-      redirect_to completion_route(@payment.order)
+      redirect_to completion_route(@order)
     end
 
     def cancel
@@ -51,18 +52,28 @@ module Spree
     def notify
       puts  "Notifying Khipu Payment: #{params}"
       begin
-        map = provider.get_payment_notification(params)
+        payment_notification = provider.get_payment_notification(params)
 
         # Aceptar el pago
-        @payment = Spree::Payment.where(identifier: map["transaction_id"]).last
+        @payment = Spree::Payment.where(identifier: payment_notification["transaction_id"]).last
 
         render  nothing: true, status: :ok and return if @payment.order.payment_state == 'paid'
 
         @khipu_receipt = Spree::KhipuPaymentReceipt.where(transaction_id: @payment.identifier).last
-        @khipu_receipt.update(map.select{ |k,v| @khipu_receipt.attributes.keys.include? k })
+        @khipu_receipt.update(payment_notification.select{ |k,v| @khipu_receipt.attributes.keys.include? k })
         @khipu_receipt.save!
 
+        unless payment_amount_valid?(@payment, payment_notification)
+          puts "Fail payment #{@payment.id} notification validation: #{@payment.amount}"
+          puts "Fail payment #{@payment.id} notification validation: #{payment_notification}"
+          render  nothing: true, status: :internal_server_error
+          return
+        end
+
+        puts "receipt id: #{@khipu_receipt.id}"
+        puts payment_notification
         @payment.capture!
+        @payment.order.next!
 
         render  nothing: true, status: :ok
 
@@ -133,5 +144,11 @@ module Spree
     def completion_route(order, custom_params = nil)
       spree.order_path(order, custom_params)
     end
+
+    # Check if payment notification is OK,  if payment amount is over zero
+    def payment_amount_valid? payment, payment_notification
+      payment && payment.amount >0  && payment_notification["amount"].to_f == payment.order.total.to_f
+    end
+
   end
 end

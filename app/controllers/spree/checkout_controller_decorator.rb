@@ -4,7 +4,7 @@ module Spree
 
         private
         def check_khipu
-            redirect_to khipu_path and return if  params[:state] == Spree::Gateway::KhipuGateway::STATE && @order.state == Spree::Gateway::KhipuGateway::STATE
+            redirect_to khipu_path(params) and return if  params[:state] == Spree::Gateway::KhipuGateway::STATE && @order.state == Spree::Gateway::KhipuGateway::STATE
         end
     end
 end

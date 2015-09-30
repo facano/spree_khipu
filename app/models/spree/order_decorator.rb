@@ -8,5 +8,9 @@ module Spree
           payments.valid.from_khipu.any?
         end
 
+        def khipu_state?
+          state.eql? Spree::Gateway::KhipuGateway::STATE
+        end
+
     end
 end

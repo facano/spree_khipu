@@ -1,0 +1,9 @@
+<% if payment.khipu_payment_method? %>
+  <dl>
+    <dt>Identificador:</dt>
+    <dd><%= payment.identifier %></dd>
+
+    <dt>ID Transacción:</dt>
+    <dd><%= payment.trx_id %></dd>
+  </dl>
+<% end %>
