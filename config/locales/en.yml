@@ -3,3 +3,17 @@ en:
     order_state:
       khipu: khipu
     kiphu_redirect: "You'll be redirected to Khipu Hosted Payment Page. After completing the payment form you'll be back to the store."
+  activerecord:
+    attributes:
+      spree/khipu_payment_receipt:
+        api_version: "API Version"
+        receiver_id: "Store ID"
+        subject: "Subject"
+        amount: "Amount"
+        currency: "Moneda"
+        transaction_id: "Transaction ID"
+        payer_email: "Payer Email"
+        bank_name: "Bank Name"
+        account_number: "Account Number"
+        payer_identifier: "Payer ID"
+        payment_id: "Payment Khipu ID"

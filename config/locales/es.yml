@@ -3,3 +3,17 @@ es:
     order_state:
       khipu: khipu
     kiphu_redirect: "Usted será redirigido a la página de pago de Khipu. Después de completar el formulario de pago volverá a la tienda."
+  activerecord:
+    attributes:
+      spree/khipu_payment_receipt:
+        api_version: "Versión de la API"
+        receiver_id: "Código Comercio"
+        subject: "Tema"
+        amount: "Monto"
+        currency: "Moneda"
+        transaction_id: "Identificador"
+        payer_email: "Email del Comprador"
+        bank_name: "Nombre del Banco"
+        account_number: "Número de Cuenta"
+        payer_identifier: "RUT del Comprador"
+        payment_id: "Identificador Khipu del pago"

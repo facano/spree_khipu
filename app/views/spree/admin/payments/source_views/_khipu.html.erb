@@ -1,9 +1,28 @@
+<% model_class = Spree::KhipuPaymentReceipt %>
 <% if payment.khipu_payment_method? %>
   <dl>
-    <dt>Identificador:</dt>
+    <dt><%= Spree::Payment.human_attribute_name(:identifier) %></dt>
     <dd><%= payment.identifier %></dd>
 
-    <dt>ID Transacción:</dt>
+    <dt><%= Spree::Payment.human_attribute_name(:trx_id) %></dt>
     <dd><%= payment.trx_id %></dd>
+
+  <% if (payment_receipt=payment.khipu_payment_receipt) %>
+        <dt><%= model_class.human_attribute_name(:api_version) %> :</dt>
+        <dd><%= payment_receipt.api_version %></dd>
+        <dt><%= model_class.human_attribute_name(:subject) %> :</dt>
+        <dd><%= payment_receipt.subject %></dd>
+        <dt><%= model_class.human_attribute_name(:payer_identifier) %> :</dt>
+        <dd><%= payment_receipt.payer_identifier %></dd>
+        <dt><%= model_class.human_attribute_name(:payer_email) %> :</dt>
+        <dd><%= payment_receipt.payer_email %></dd>
+        <dt><%= model_class.human_attribute_name(:bank_name) %> :</dt>
+        <dd><%= payment_receipt.bank_name %></dd>
+        <dt><%= model_class.human_attribute_name(:account_number) %> :</dt>
+        <dd><%= payment_receipt.account_number %></dd>
+        <dt><%= model_class.human_attribute_name(:amount) %> :</dt>
+        <dd><%= number_to_currency payment_receipt.amount %></dd>
+  <% end %>
+
   </dl>
 <% end %>
