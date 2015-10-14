@@ -38,6 +38,7 @@ module Spree
       redirect_to khipu_cancel_path(params) and return  if @payment.failed?
 
       flash.notice = Spree.t(:order_processed_successfully)
+      flash[:commerce_tracking] = "nothing special" # asume a complete payment for analytics and others callbacks in view
 
       redirect_to completion_route(@order)
     end
