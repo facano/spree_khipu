@@ -18,6 +18,16 @@ bundle
 bundle exec rails g spree_khipu:install
 ```
 
+Configuration
+----------------
+Add `config/khipu.yml` if you want to configure the protocol in URLs to send:
+```ruby
+development:
+  protocol: 'http'
+production:
+  protocol: 'https'
+```
+
 Testing
 -------
 

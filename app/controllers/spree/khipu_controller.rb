@@ -98,9 +98,9 @@ module Spree
         expires_date:   "",
         transaction_id: payment.identifier,
         custom:         "",
-        notify_url:     khipu_notify_url,
-        return_url:     khipu_success_url(payment.identifier),
-        cancel_url:     khipu_cancel_url(payment.identifier),
+        notify_url:     KhipuConfig::PROTOCOL ? khipu_notify_url(protocol: KhipuConfig::PROTOCOL) : khipu_notify_url,
+        return_url:    KhipuConfig::PROTOCOL ? khipu_success_url(payment.identifier, protocol: KhipuConfig::PROTOCOL) : khipu_success_url(payment.identifier),
+        cancel_url:   KhipuConfig::PROTOCOL ? khipu_cancel_url(payment.identifier, protocol: KhipuConfig::PROTOCOL) :  khipu_cancel_url(payment.identifier),
         picture_url:    "" # Rails.env.production? ? view_context.image_url('Logo Reu blanco.png') : ""
       }
     end
