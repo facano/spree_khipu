@@ -90,7 +90,7 @@ module Spree
     def payment_args(payment)
       {
         receiver_id:    payment_method.preferences[:commerce_id],
-        subject:        payment_method.preferences[:subject],
+        subject:        subject,
         body:           "",
         amount:         payment.amount.to_i,
         payer_email:    payment.order.email,
@@ -149,6 +149,10 @@ module Spree
     # Check if payment notification is OK,  if payment amount is over zero
     def payment_amount_valid? payment, payment_notification
       payment && payment.amount >0  && payment_notification["amount"].to_f == payment.order.total.to_f
+    end
+
+    def subject
+      current_store ? payment_method.preferences[:subject].gsub("%current_store%", current_store.name) : payment_method.preferences[:subject]
     end
 
   end

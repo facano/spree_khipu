@@ -28,6 +28,8 @@ production:
   protocol: 'https'
 ```
 
+If you use multistore configuration with the `spree-multi-domain` gem, customize the subject email using the tag `%current_store%`  in the desired location.
+
 Testing
 -------
 
