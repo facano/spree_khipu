@@ -12,10 +12,11 @@ module Spree
       order = current_order || raise(ActiveRecord::RecordNotFound)
 
       @payment = order.payments.order(:id).last
-
       begin
         puts "Create Payment: #{payment_args(@payment)}"
-        map = provider.create_payment_url(payment_args(@payment))
+        payment_params = payment_args(@payment)
+        @payment.create_khipu_payment_receipt khipu_payment_receipt_permit(payment_params)
+        map = provider.create_payment_url(payment_params)
         khipu_payment_url = payment_method.modify_url_by_payment_type(map['url'])
         redirect_to khipu_payment_url
 
@@ -28,7 +29,7 @@ module Spree
     def success
       @payment = Spree::Payment.where(identifier: params[:payment]).last
       @order = @payment.order
-      @khipu_receipt = Spree::KhipuPaymentReceipt.create(payment: @payment)
+      @khipu_receipt = @payment.khipu_payment_receipt
 
       # To clean the Cart
       session[:order_id] = nil
@@ -45,7 +46,7 @@ module Spree
 
     def cancel
       @payment = Spree::Payment.where(identifier: params[:payment]).last
-      @khipu_receipt = Spree::KhipuPaymentReceipt.create(payment: @payment)
+      @khipu_receipt = @payment.khipu_payment_receipt
 
       redirect_to checkout_state_path(:payment) and return
     end
@@ -60,7 +61,7 @@ module Spree
 
         render  nothing: true, status: :ok and return if @payment.order.payment_state == 'paid'
 
-        @khipu_receipt = Spree::KhipuPaymentReceipt.where(transaction_id: @payment.identifier).last
+        @khipu_receipt = @payment.khipu_payment_receipt
         @khipu_receipt.update(payment_notification.select{ |k,v| @khipu_receipt.attributes.keys.include? k })
         @khipu_receipt.save!
 
@@ -153,6 +154,10 @@ module Spree
 
     def subject
       current_store ? payment_method.preferences[:subject].gsub("%current_store%", current_store.name) : payment_method.preferences[:subject]
+    end
+
+    def khipu_payment_receipt_permit payment_params
+      payment_params.select{|k,v| [:receiver_id, :subject, :amount, :transaction_id, :payer_email].include? k}
     end
 
   end
