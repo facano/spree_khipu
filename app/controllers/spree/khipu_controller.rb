@@ -89,6 +89,7 @@ module Spree
     private
 
     def payment_args(payment)
+      notify_url, return_url, cancel_url = get_urls(payment)
       {
         receiver_id:    payment_method.preferences[:commerce_id],
         subject:        subject,
@@ -99,11 +100,22 @@ module Spree
         expires_date:   "",
         transaction_id: payment.identifier,
         custom:         "",
-        notify_url:     KhipuConfig::PROTOCOL ? khipu_notify_url(protocol: KhipuConfig::PROTOCOL) : khipu_notify_url,
-        return_url:    KhipuConfig::PROTOCOL ? khipu_success_url(payment.identifier, protocol: KhipuConfig::PROTOCOL) : khipu_success_url(payment.identifier),
-        cancel_url:   KhipuConfig::PROTOCOL ? khipu_cancel_url(payment.identifier, protocol: KhipuConfig::PROTOCOL) :  khipu_cancel_url(payment.identifier),
-        picture_url:    "" # Rails.env.production? ? view_context.image_url('Logo Reu blanco.png') : ""
+        notify_url:     notify_url,
+        return_url:    return_url,
+        cancel_url:   cancel_url,
+        picture_url:    ""
       }
+    end
+
+    # Return URL in [notify_url, success_url, cancel_url] format
+    def get_urls payment
+      if KhipuConfig::DOMAIN_URL
+        ["#{KhipuConfig::DOMAIN_URL}#{khipu_notify_path}", "#{KhipuConfig::DOMAIN_URL}#{khipu_success_path(payment.identifier)}", "#{KhipuConfig::DOMAIN_URL}#{khipu_cancel_path(payment.identifier)}"]
+      elsif KhipuConfig::PROTOCOL
+        [ khipu_notify_url(protocol: KhipuConfig::PROTOCOL), khipu_success_url(payment.identifier, protocol: KhipuConfig::PROTOCOL), khipu_cancel_url(payment.identifier, protocol: KhipuConfig::PROTOCOL) ]
+      else # without custom config
+        [khipu_notify_url, khipu_success_url(payment.identifier), khipu_cancel_url(payment.identifier)]
+      end
     end
 
     def add_hash(args)
