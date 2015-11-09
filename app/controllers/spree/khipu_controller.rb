@@ -109,12 +109,10 @@ module Spree
 
     # Return URL in [notify_url, success_url, cancel_url] format
     def get_urls payment
-      if KhipuConfig::DOMAIN_URL
-        ["#{KhipuConfig::DOMAIN_URL}#{khipu_notify_path}", "#{KhipuConfig::DOMAIN_URL}#{khipu_success_path(payment.identifier)}", "#{KhipuConfig::DOMAIN_URL}#{khipu_cancel_path(payment.identifier)}"]
-      elsif KhipuConfig::PROTOCOL
-        [ khipu_notify_url(protocol: KhipuConfig::PROTOCOL), khipu_success_url(payment.identifier, protocol: KhipuConfig::PROTOCOL), khipu_cancel_url(payment.identifier, protocol: KhipuConfig::PROTOCOL) ]
+      if KhipuConfig::PROTOCOL
+        [ KhipuConfig::DOMAIN_URL ? "#{KhipuConfig::DOMAIN_URL}#{khipu_notify_path}" : khipu_notify_url(protocol: KhipuConfig::PROTOCOL), khipu_success_url(payment.identifier, protocol: KhipuConfig::PROTOCOL), khipu_cancel_url(payment.identifier, protocol: KhipuConfig::PROTOCOL) ]
       else # without custom config
-        [khipu_notify_url, khipu_success_url(payment.identifier), khipu_cancel_url(payment.identifier)]
+        [KhipuConfig::DOMAIN_URL ? "#{KhipuConfig::DOMAIN_URL}#{khipu_notify_path}" : khipu_notify_url, khipu_success_url(payment.identifier), khipu_cancel_url(payment.identifier)]
       end
     end
 
