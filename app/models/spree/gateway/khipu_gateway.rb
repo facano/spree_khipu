@@ -58,4 +58,13 @@ class Spree::Gateway::KhipuGateway < Spree::Gateway
   def payment_method_logo
       "https://s3.amazonaws.com/static.khipu.com/buttons/2015/150x50-transparent.png"
   end
+
+  def credit(money, credit_card, response_code, options = {})
+      ActiveMerchant::Billing::Response.new(true, '#{Spree::Gateway::KhipuGateway.to_s}: Forced success', {}, {})
+  end
+
+  def void(response_code, options = {})
+      ActiveMerchant::Billing::Response.new(true, '#{Spree::Gateway::KhipuGateway.to_s}: Forced success', {}, {})
+  end
+
 end
