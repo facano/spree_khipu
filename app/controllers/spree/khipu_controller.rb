@@ -10,26 +10,33 @@ module Spree
 
     def pay
       order = current_order || raise(ActiveRecord::RecordNotFound)
-
+      Rails.logger.info "#{__FILE__}:#{__LINE__} Khipu Pay Order: #{order.number}"
       @payment = order.payments.order(:id).last
+
       begin
-        puts "Create Payment: #{payment_args(@payment)}"
+        Rails.logger.info "#{__FILE__}:#{__LINE__} Create Payment: #{payment_args(@payment)}"
         payment_params = payment_args(@payment)
         @payment.create_khipu_payment_receipt khipu_payment_receipt_permit(payment_params)
         map = provider.create_payment_url(payment_params)
         khipu_payment_url = payment_method.modify_url_by_payment_type(map['url'])
+
+        Rails.logger.info "#{__FILE__}:#{__LINE__} Khipu Pay OK! Order: #{order.number}"
         redirect_to khipu_payment_url
 
       rescue Khipu::ApiError => error
         flash[:error] = 'Hubo un problema con Khipu, intente nuevamente más tarde.'
+        Rails.logger.error "#{__FILE__}:#{__LINE__} Khipu Pay ERROR! Order: #{order.number}"
+        Rails.logger.error error.type
+        Rails.logger.error error.message
         redirect_to checkout_state_path(:payment) and return
       end
     end
 
     def success
-      @payment = Spree::Payment.where(identifier: params[:payment]).last
+      @payment = Spree::Payment.where(identifier: params[:payment]).last || raise(ActiveRecord::RecordNotFound)
       @order = @payment.order
       @khipu_receipt = @payment.khipu_payment_receipt
+      Rails.logger.info "#{__FILE__}:#{__LINE__} Khipu Success Order: #{@order.number}"
 
       # To clean the Cart
       session[:order_id] = nil
@@ -45,6 +52,7 @@ module Spree
     end
 
     def cancel
+      Rails.logger.info "#{__FILE__}:#{__LINE__} Cancel Khipu Payment: #{params}"
       @payment = Spree::Payment.where(identifier: params[:payment]).last
       @khipu_receipt = @payment.khipu_payment_receipt
 
@@ -52,36 +60,39 @@ module Spree
     end
 
     def notify
-      puts  "Notifying Khipu Payment: #{params}"
+     Rails.logger.info "#{__FILE__}:#{__LINE__} Notifying Khipu Payment: #{params}"
       begin
         payment_notification = provider.get_payment_notification(params)
 
         # Aceptar el pago
         @payment = Spree::Payment.where(identifier: payment_notification["transaction_id"]).last
+        @order = @payment.order
 
-        render  nothing: true, status: :ok and return if @payment.order.payment_state == 'paid'
+        render  nothing: true, status: :ok and return if (@order.payment_state == 'paid' || @order.completed?)
 
         @khipu_receipt = @payment.khipu_payment_receipt
         @khipu_receipt.update(payment_notification.select{ |k,v| @khipu_receipt.attributes.keys.include? k })
         @khipu_receipt.save!
 
         unless payment_amount_valid?(@payment, payment_notification)
-          puts "Fail payment #{@payment.id} notification validation: #{@payment.amount}"
-          puts "Fail payment #{@payment.id} notification validation: #{payment_notification}"
+          Rails.logger.info "Fail payment #{@payment.id} notification validation: #{payment_notification} - #{@payment.amount}"
           render  nothing: true, status: :internal_server_error
           return
         end
 
-        puts "receipt id: #{@khipu_receipt.id}"
-        puts payment_notification
+        Rails.logger.info "#{__FILE__}:#{__LINE__} Receipt id: #{@khipu_receipt.id}"
+        Rails.logger.info payment_notification
         @payment.capture!
-        @payment.order.next!
+        Rails.logger.info "#{__FILE__}:#{__LINE__} Payment: #{@payment.id} for order #{@order.number} captured!"
+        @order.next!
+        Rails.logger.info "#{__FILE__}:#{__LINE__} Order state #{@order.state}!"
 
         render  nothing: true, status: :ok
 
       rescue Khipu::ApiError => error
-        logger.error error.type
-        logger.error error.message
+        Rails.logger.error "#{__FILE__}:#{__LINE__} Khipu Notify Error -  Payment: #{@payment.id} and Order: #{@payment.order.number}"
+        Rails.logger.error error.type
+        Rails.logger.error error.message
         render  nothing: true, status: :internal_server_error
       end
     end
